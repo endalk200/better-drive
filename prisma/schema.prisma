@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -8,18 +5,6 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
-}
-
-model Post {
-  id        Int      @id @default(autoincrement())
-  name      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  createdBy   User   @relation(fields: [createdById], references: [id])
-  createdById String
-
-  @@index([name])
 }
 
 // Necessary for Next auth
@@ -58,7 +43,12 @@ model User {
   image         String?
   accounts      Account[]
   sessions      Session[]
-  posts         Post[]
+
+folders       Folder[]
+  files         File[]
+  storageUsed   Int       @default(0) // Storage used in bytes
+createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 }
 
 model VerificationToken {
@@ -67,4 +57,44 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Folder {
+  id          String    @id @default(cuid())
+  name        String
+  userId      String
+  parentId    String?   
+  isStarred   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent      Folder?   @relation("FolderToFolder", fields: [parentId], references: [id], onDelete: Cascade)
+  subFolders  Folder[]  @relation("FolderToFolder")
+  files       File[]
+
+  @@index([userId])
+  @@index([parentId])
+}
+
+model File {
+  id          String    @id @default(cuid())
+  name        String
+  userId      String
+  folderId    String
+  type        String    // MIME type
+  size        Int       // Size in bytes
+  url         String    // UploadThing URL
+  key         String    // UploadThing file key
+  isStarred   Boolean   @default(false)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder      Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([folderId])
 }
