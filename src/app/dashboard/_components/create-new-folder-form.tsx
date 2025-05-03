@@ -57,9 +57,7 @@ export function CreateNewFolderForm({
       onSuccess();
     },
     onError: (error) => {
-      toast("Error", {
-        description: error.message,
-      });
+      toast.error(error.message);
     },
   });
 

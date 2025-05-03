@@ -10,7 +10,7 @@ import {
 } from "lucide-react";
 
 export const getFileIcon = (fileType: string) => {
-  switch (fileType.toLowerCase()) {
+  switch (fileType.toLowerCase().split("/").pop() ?? "") {
     case "png":
     case "jpg":
     case "jpeg":
