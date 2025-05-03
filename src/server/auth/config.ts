@@ -15,15 +15,8 @@ declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
-      // ...other properties
-      // role: UserRole;
     } & DefaultSession["user"];
   }
-
-  // interface User {
-  //   // ...other properties
-  //   // role: UserRole;
-  // }
 }
 
 /**
@@ -35,7 +28,7 @@ export const authConfig = {
   providers: [
     GitHubProvider({
       clientId: env.GITHUB_CLIENT_ID,
-      clientSecret: env.GITHUB_SECRET,
+      clientSecret: env.GITHUB_CLIENT_SECRET,
     }),
   ],
   adapter: PrismaAdapter(db),
@@ -47,5 +40,15 @@ export const authConfig = {
         id: user.id,
       },
     }),
+  },
+  events: {
+    createUser: async ({ user }) => {
+      await db.folder.create({
+        data: {
+          name: "Home",
+          userId: user.id!,
+        },
+      });
+    },
   },
 } satisfies NextAuthConfig;

@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -7,7 +8,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Necessary for Next auth
 model Account {
   id                       String  @id @default(cuid())
   userId                   String
@@ -44,11 +44,11 @@ model User {
   accounts      Account[]
   sessions      Session[]
 
-folders       Folder[]
-  files         File[]
-  storageUsed   Int       @default(0) // Storage used in bytes
-createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  folders     Folder[]
+  files       File[]
+  storageUsed Int      @default(0) // Storage used in bytes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
 
 model VerificationToken {
@@ -60,40 +60,40 @@ model VerificationToken {
 }
 
 model Folder {
-  id          String    @id @default(cuid())
-  name        String
-  userId      String
-  parentId    String?   
-  isStarred   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  parentId  String?
+  isStarred Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent      Folder?   @relation("FolderToFolder", fields: [parentId], references: [id], onDelete: Cascade)
-  subFolders  Folder[]  @relation("FolderToFolder")
-  files       File[]
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent     Folder?  @relation("FolderToFolder", fields: [parentId], references: [id], onDelete: Cascade)
+  subFolders Folder[] @relation("FolderToFolder")
+  files      File[]
 
   @@index([userId])
   @@index([parentId])
 }
 
 model File {
-  id          String    @id @default(cuid())
-  name        String
-  userId      String
-  folderId    String
-  type        String    // MIME type
-  size        Int       // Size in bytes
-  url         String    // UploadThing URL
-  key         String    // UploadThing file key
-  isStarred   Boolean   @default(false)
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  userId    String
+  folderId  String
+  type      String // MIME type
+  size      Int // Size in bytes
+  url       String // UploadThing URL
+  key       String // UploadThing file key
+  isStarred Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relations
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  folder      Folder    @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  folder Folder @relation(fields: [folderId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@index([folderId])

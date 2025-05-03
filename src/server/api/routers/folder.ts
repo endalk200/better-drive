@@ -1,6 +1,9 @@
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { UTApi } from "uploadthing/server";
+
+export const utapi = new UTApi({});
 
 const folderInput = z.object({
   name: z.string().min(1).max(255),
@@ -180,85 +183,102 @@ export const folderRouter = createTRPCRouter({
     }),
 
   delete: protectedProcedure
-    .input(
-      z.object({
-        id: z.string(),
-        type: z.enum(["file", "folder"]),
-      }),
-    )
+    .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      if (input.type === "file") {
-        const file = await ctx.db.file.findUnique({
-          where: { id: input.id },
-        });
+      // First, verify folder ownership
+      const folder = await ctx.db.folder.findUnique({
+        where: { id: input.id },
+        select: { userId: true },
+      });
 
-        if (!file || file.userId !== ctx.session.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "File not found",
-          });
-        }
-
-        // Delete the file
-        await ctx.db.file.delete({
-          where: { id: input.id },
-        });
-
-        // Update user's storage usage
-        await ctx.db.user.update({
-          where: { id: ctx.session.user.id },
-          data: {
-            storageUsed: {
-              decrement: file.size,
-            },
-          },
-        });
-      } else {
-        const folder = await ctx.db.folder.findUnique({
-          where: { id: input.id },
-          include: {
-            files: true,
-          },
-        });
-
-        if (!folder || folder.userId !== ctx.session.user.id) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Folder not found",
-          });
-        }
-
-        // Calculate total size of all files in the folder and subfolders
-        const totalSize = await ctx.db.$transaction(async (tx) => {
-          const allFiles = await tx.file.findMany({
-            where: {
-              folder: {
-                OR: [{ id: input.id }, { parentId: input.id }],
-              },
-            },
-            select: { size: true },
-          });
-
-          return allFiles.reduce((acc, file) => acc + file.size, 0);
-        });
-
-        // Delete the folder (cascade will handle files and subfolders)
-        await ctx.db.folder.delete({
-          where: { id: input.id },
-        });
-
-        // Update user's storage usage
-        await ctx.db.user.update({
-          where: { id: ctx.session.user.id },
-          data: {
-            storageUsed: {
-              decrement: totalSize,
-            },
-          },
+      if (!folder || folder.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Folder not found",
         });
       }
 
-      return { success: true };
+      try {
+        // Use a transaction to ensure data consistency
+        return await ctx.db.$transaction(async (tx) => {
+          // Recursive function to get all subfolder IDs
+          const getAllSubFolderIds = async (
+            folderId: string,
+            collected: Set<string> = new Set(),
+          ): Promise<Set<string>> => {
+            const subFolders = await tx.folder.findMany({
+              where: { parentId: folderId },
+              select: { id: true },
+            });
+
+            for (const { id } of subFolders) {
+              collected.add(id);
+              await getAllSubFolderIds(id, collected);
+            }
+
+            return collected;
+          };
+
+          // Get all subfolder IDs including the target folder
+          const folderIds = await getAllSubFolderIds(input.id);
+          folderIds.add(input.id);
+
+          // Get all files in these folders
+          const files = await tx.file.findMany({
+            where: {
+              folderId: {
+                in: Array.from(folderIds),
+              },
+            },
+            select: {
+              id: true,
+              key: true,
+              size: true,
+            },
+          });
+
+          // Calculate total size to be freed
+          const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+
+          // Delete files from UploadThing
+          if (files.length > 0) {
+            try {
+              await utapi.deleteFiles(files.map((file) => file.key));
+            } catch (error) {
+              console.error("Error deleting files from UploadThing:", error);
+              // Continue with database cleanup even if UploadThing deletion fails
+            }
+          }
+
+          // Delete the folder (this will cascade delete subfolders and files)
+          await tx.folder.delete({
+            where: { id: input.id },
+          });
+
+          // Update user's storage usage
+          await tx.user.update({
+            where: { id: ctx.session.user.id },
+            data: {
+              storageUsed: {
+                decrement: totalSize,
+              },
+            },
+          });
+
+          return {
+            success: true,
+            deletedFiles: files.length,
+            deletedFolders: folderIds.size,
+            freedSpace: totalSize,
+          };
+        });
+      } catch (error) {
+        console.error("Error in folder deletion:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Failed to delete folder",
+        });
+      }
     }),
 
   // Toggle star status

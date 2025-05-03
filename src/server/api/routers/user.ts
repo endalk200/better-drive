@@ -1,4 +1,5 @@
 import { createTRPCRouter, protectedProcedure } from "@/server/api/trpc";
+import { MAX_STORAGE_LIMIT } from "@/server/config";
 import { TRPCError } from "@trpc/server";
 
 export const userRouter = createTRPCRouter({
@@ -17,7 +18,7 @@ export const userRouter = createTRPCRouter({
 
     return {
       usedBytes: user.storageUsed,
-      totalBytes: 50 * 1024 * 1024, // 50MB limit
+      totalBytes: MAX_STORAGE_LIMIT,
     };
   }),
 });
