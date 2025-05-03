@@ -117,6 +117,18 @@ export const folderRouter = createTRPCRouter({
         });
       }
 
+      if (!folder.parentId && input.name !== "Home") {
+        const homeFolderCheck = await ctx.db.folder.findFirst({
+          where: { id: input.id, name: "Home", parentId: null },
+        });
+        if (homeFolderCheck) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Cannot rename the root 'Home' folder.",
+          });
+        }
+      }
+
       // Check for naming conflicts
       const existingFolder = await ctx.db.folder.findFirst({
         where: {

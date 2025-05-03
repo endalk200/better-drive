@@ -31,6 +31,7 @@ import { UploadModal } from "./upload-modal";
 import { formatBytes } from "@/lib/utils";
 import { ImagePreviewModal } from "@/components/image-preview-modal";
 import { FilePreviewModal } from "@/components/file-preview-modal";
+import { RenameModal } from "./rename-modal";
 
 interface BreadcrumbItem {
   id: string | null;
@@ -60,6 +61,27 @@ export function FileExplorer() {
     subFolderCount: number;
     fileCount: number;
   } | null>(null);
+
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [itemToRename, setItemToRename] = useState<{
+    id: string;
+    name: string;
+    type: "file" | "folder";
+  } | null>(null);
+
+  const handleRenameClick = (
+    id: string,
+    name: string,
+    type: "file" | "folder",
+  ) => {
+    // Prevent renaming the root Home folder from the UI
+    if (type === "folder" && name === "Home" && !currentFolderId) {
+      toast.error("Cannot rename the root 'Home' folder.");
+      return;
+    }
+    setItemToRename({ id, name, type });
+    setRenameModalOpen(true);
+  };
 
   const [currentFolderId, setCurrentFolderId] = useQueryState(
     "folderId",
@@ -242,7 +264,12 @@ export function FileExplorer() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      handleRenameClick(folder.id, folder.name, "folder")
+                    }
+                    disabled={folder.name === "Home" && !folder.parentId}
+                  >
                     <Pencil className="mr-2 h-4 w-4" />
                     Rename
                   </DropdownMenuItem>
@@ -323,7 +350,11 @@ export function FileExplorer() {
                     <Eye className="mr-2 h-4 w-4" />
                     View
                   </DropdownMenuItem>
-                  <DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() =>
+                      handleRenameClick(file.id, file.name, "file")
+                    }
+                  >
                     <Pencil className="mr-2 h-4 w-4" />
                     Rename
                   </DropdownMenuItem>
@@ -361,6 +392,19 @@ export function FileExplorer() {
             This folder is empty
           </div>
         )}
+
+      {itemToRename && (
+        <RenameModal
+          isOpen={renameModalOpen}
+          onClose={() => {
+            setRenameModalOpen(false);
+            setItemToRename(null); // Clear the item when closing
+          }}
+          itemType={itemToRename.type}
+          itemId={itemToRename.id}
+          currentName={itemToRename.name}
+        />
+      )}
 
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}

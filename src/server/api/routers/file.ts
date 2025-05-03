@@ -85,6 +85,52 @@ export const fileRouter = createTRPCRouter({
       });
     }),
 
+  rename: protectedProcedure
+    .input(
+      z.object({
+        id: z.string(),
+        name: z.string().min(1, "Name cannot be empty").max(255),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const file = await ctx.db.file.findUnique({
+        where: { id: input.id },
+        select: { userId: true, folderId: true },
+      });
+
+      if (!file || file.userId !== ctx.session.user.id) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "File not found",
+        });
+      }
+
+      // Check for naming conflicts in the same folder
+      const existingFile = await ctx.db.file.findFirst({
+        where: {
+          name: input.name,
+          folderId: file.folderId,
+          userId: ctx.session.user.id,
+          id: { not: input.id }, // Exclude the current file
+        },
+      });
+
+      if (existingFile) {
+        throw new TRPCError({
+          code: "CONFLICT",
+          message: "A file with this name already exists in this folder.",
+        });
+      }
+
+      // Update the file name
+      const updatedFile = await ctx.db.file.update({
+        where: { id: input.id },
+        data: { name: input.name },
+      });
+
+      return updatedFile;
+    }),
+
   delete: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {

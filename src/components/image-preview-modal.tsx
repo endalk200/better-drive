@@ -25,7 +25,7 @@ export function ImagePreviewModal() {
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-        <DialogTitle>Service Provider Profile Picture</DialogTitle>
+        <DialogTitle>Image Preview</DialogTitle>
         <div className="mt-2 flex min-h-[200px] items-center justify-center">
           {/* Added container for centering loader */}
           {isLoading && (

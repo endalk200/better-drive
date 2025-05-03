@@ -19,6 +19,7 @@ Better Drive is a modern, secure file management system inspired by Google Drive
 - ✅ Storage quota management (50MB per user)
 - ✅ File type validation
 - ✅ Progress tracking for uploads
+- ✅ File preview (images and PDFs)
 
 ### Folder Management
 

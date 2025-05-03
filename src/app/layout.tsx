@@ -3,6 +3,8 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
+import { Analytics } from "@vercel/analytics/react"
+
 import { TRPCReactProvider } from "@/trpc/react";
 
 import "@/styles/globals.css";
@@ -34,6 +36,7 @@ export default function RootLayout({
           </SessionProvider>
           <Toaster position="bottom-right" richColors />
         </TRPCReactProvider>
+        <Analytics />
       </body>
     </html>
   );
