@@ -43,8 +43,8 @@ export function DeleteConfirmationModal({
           </DialogTitle>
           <DialogDescription className="space-y-2">
             <p>
-              Are you sure you want to delete <strong>{name}</strong>? This
-              action cannot be undone.
+              Are you sure you want to delete <strong>{name}</strong>?
+              {type === "file" && " This file will be permanently deleted."}
             </p>
             {type === "folder" && folderStats && (
               <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">

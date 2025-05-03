@@ -14,6 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getFileIcon } from "../_components/utils";
+import { formatBytes } from "@/lib/utils";
 
 export default function StaredFileExplorer() {
   const router = useRouter();
@@ -37,13 +38,6 @@ export default function StaredFileExplorer() {
 
   const handleFolderClick = (folderId: string) => {
     router.push(`/dashboard?folderId=${folderId}`);
-  };
-
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B";
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-    else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + " MB";
-    else return (bytes / 1073741824).toFixed(1) + " GB";
   };
 
   if (isLoading || !data) {
@@ -131,7 +125,7 @@ export default function StaredFileExplorer() {
                   <Star className="h-4 w-4 flex-shrink-0 text-yellow-400" />
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{formatFileSize(file.size)}</span>
+                  <span>{formatBytes(file.size)}</span>
                   <span>•</span>
                   <span>{new Date(file.updatedAt).toLocaleDateString()}</span>
                 </div>

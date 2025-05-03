@@ -11,8 +11,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {
   FolderIcon,
-  FileIcon,
-  MoreVerticalIcon,
   StarIcon,
   HomeIcon,
   ChevronRightIcon,
@@ -23,14 +21,13 @@ import {
 } from "lucide-react";
 import { CreateNewFolderModal } from "./create-new-folder-modal";
 import { api } from "@/trpc/react";
-import { formatBytes } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFileIcon } from "./utils";
 import { useQueryState, parseAsString } from "nuqs";
 import { toast } from "sonner";
 import { DeleteConfirmationModal } from "./delete-confirmation-modal";
-import { UploadButton, UploadDropzone } from "@/lib/utils/uploadthing";
 import { UploadModal } from "./upload-modal";
+import { formatBytes } from "@/lib/utils";
 
 interface BreadcrumbItem {
   id: string | null;
@@ -81,25 +78,45 @@ export function FileExplorer() {
     },
   });
 
-  const deleteItem = api.folder.delete.useMutation({
-    onSuccess: () => {
+  const deleteFolder = api.folder.delete.useMutation({
+    onSuccess: (result) => {
       toast.success(
-        `${
-          itemToDelete?.type === "folder" ? "Folder" : "File"
-        } deleted successfully`,
+        `Folder deleted successfully! Freed ${formatBytes(result.freedSpace)}`,
+        {
+          description: `Deleted ${result.deletedFiles} files and ${
+            result.deletedFolders
+          } folder${result.deletedFolders !== 1 ? "s" : ""}.`,
+        },
       );
-      setDeleteModalOpen(false);
-      setItemToDelete(null);
-      setFolderStats(null);
+
+      // Invalidate queries to refresh the UI
       void utils.folder.getContents.invalidate();
-      void utils.folder.getStarred.invalidate();
+      void utils.user.getStorageInfo.invalidate();
     },
     onError: (error) => {
-      toast.error(error.message);
+      toast.error("Failed to delete folder", {
+        description: error.message,
+      });
     },
   });
 
-  // Add this function to handle delete clicks
+  const deleteFile = api.file.delete.useMutation({
+    onSuccess: (result) => {
+      toast.success(`File "${result.deletedFile.name}" deleted successfully!`, {
+        description: `Freed ${formatBytes(result.deletedFile.size)} of storage space.`,
+      });
+
+      // Invalidate queries to refresh the UI
+      void utils.folder.getContents.invalidate();
+      void utils.user.getStorageInfo.invalidate();
+    },
+    onError: (error) => {
+      toast.error("Failed to delete file", {
+        description: error.message,
+      });
+    },
+  });
+
   const handleDeleteClick = async (
     id: string,
     name: string,
@@ -339,14 +356,15 @@ export function FileExplorer() {
           setFolderStats(null);
         }}
         onConfirm={() => {
-          if (itemToDelete) {
-            deleteItem.mutate({
-              id: itemToDelete.id,
-              type: itemToDelete.type,
-            });
+          if (!itemToDelete) return;
+
+          if (itemToDelete.type === "folder") {
+            deleteFolder.mutate({ id: itemToDelete.id });
+          } else {
+            deleteFile.mutate({ id: itemToDelete.id });
           }
         }}
-        isLoading={deleteItem.isPending}
+        isLoading={deleteFolder.isPending}
         type={itemToDelete?.type ?? "file"}
         name={itemToDelete?.name ?? ""}
         folderStats={folderStats ?? undefined}
