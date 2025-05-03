@@ -18,16 +18,19 @@ import {
   Star,
   Trash2,
   Pencil,
+  Eye,
 } from "lucide-react";
 import { CreateNewFolderModal } from "./create-new-folder-modal";
 import { api } from "@/trpc/react";
 import { Card, CardContent } from "@/components/ui/card";
 import { getFileIcon } from "./utils";
-import { useQueryState, parseAsString } from "nuqs";
+import { useQueryState, parseAsString, parseAsBoolean } from "nuqs";
 import { toast } from "sonner";
 import { DeleteConfirmationModal } from "./delete-confirmation-modal";
 import { UploadModal } from "./upload-modal";
 import { formatBytes } from "@/lib/utils";
+import { ImagePreviewModal } from "@/components/image-preview-modal";
+import { FilePreviewModal } from "@/components/file-preview-modal";
 
 interface BreadcrumbItem {
   id: string | null;
@@ -35,7 +38,18 @@ interface BreadcrumbItem {
 }
 
 export function FileExplorer() {
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [, setImagePreviewModalOpen] = useQueryState(
+    "image-modal",
+    parseAsBoolean.withDefault(false),
+  );
+  const [, setImagePreviewUrl] = useQueryState("image-url", parseAsString);
+
+  const [, setFilePreviewModalOpen] = useQueryState(
+    "file-modal",
+    parseAsBoolean.withDefault(false),
+  );
+  const [, setFilePreviewUrl] = useQueryState("file-url", parseAsString);
+
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<{
     id: string;
@@ -51,7 +65,6 @@ export function FileExplorer() {
     "folderId",
     parseAsString,
   );
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([
     { id: null, name: "Home" },
   ]);
@@ -109,6 +122,10 @@ export function FileExplorer() {
       // Invalidate queries to refresh the UI
       void utils.folder.getContents.invalidate();
       void utils.user.getStorageInfo.invalidate();
+
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
+      setFolderStats(null);
     },
     onError: (error) => {
       toast.error("Failed to delete file", {
@@ -157,13 +174,6 @@ export function FileExplorer() {
     );
   };
 
-  const formatFileSize = (bytes: number) => {
-    if (bytes < 1024) return bytes + " B";
-    else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
-    else if (bytes < 1073741824) return (bytes / 1048576).toFixed(1) + " MB";
-    else return (bytes / 1073741824).toFixed(1) + " GB";
-  };
-
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -186,10 +196,10 @@ export function FileExplorer() {
           ))}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={() => setIsUploadModalOpen(true)}>
-            Upload Files
-          </Button>
-          <Button onClick={() => setIsCreateModalOpen(true)}>New Folder</Button>
+          <UploadModal folderId={currentFolderId ?? defaultFolder?.id} />
+          <CreateNewFolderModal
+            parentId={currentFolderId ?? defaultFolder?.id}
+          />
         </div>
       </div>
 
@@ -284,7 +294,7 @@ export function FileExplorer() {
                   )}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-gray-500">
-                  <span>{formatFileSize(file.size)}</span>
+                  <span>{formatBytes(file.size)}</span>
                   <span>•</span>
                   <span>{new Date(file.updatedAt).toLocaleDateString()}</span>
                 </div>
@@ -297,6 +307,22 @@ export function FileExplorer() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={() => {
+                      if (file.type.startsWith("image/")) {
+                        // Open image preview modal
+                        void setImagePreviewModalOpen(true);
+                        void setImagePreviewUrl(file.url);
+                      } else if (file.type.startsWith("application/pdf")) {
+                        // Open file preview modal
+                        void setFilePreviewModalOpen(true);
+                        void setFilePreviewUrl(file.url);
+                      }
+                    }}
+                  >
+                    <Eye className="mr-2 h-4 w-4" />
+                    View
+                  </DropdownMenuItem>
                   <DropdownMenuItem>
                     <Pencil className="mr-2 h-4 w-4" />
                     Rename
@@ -328,12 +354,6 @@ export function FileExplorer() {
         ))}
       </div>
 
-      <UploadModal
-        isOpen={isUploadModalOpen}
-        onClose={() => setIsUploadModalOpen(false)}
-        folderId={currentFolderId ?? defaultFolder?.id}
-      />
-
       {/* Empty State */}
       {folderData?.files.length === 0 &&
         folderData?.subFolders.length === 0 && (
@@ -341,12 +361,6 @@ export function FileExplorer() {
             This folder is empty
           </div>
         )}
-
-      <CreateNewFolderModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        parentId={currentFolderId ?? defaultFolder?.id}
-      />
 
       <DeleteConfirmationModal
         isOpen={deleteModalOpen}
@@ -356,7 +370,13 @@ export function FileExplorer() {
           setFolderStats(null);
         }}
         onConfirm={() => {
-          if (!itemToDelete) return;
+          if (!itemToDelete) {
+            setDeleteModalOpen(false);
+            setItemToDelete(null);
+            setFolderStats(null);
+
+            return;
+          }
 
           if (itemToDelete.type === "folder") {
             deleteFolder.mutate({ id: itemToDelete.id });
@@ -369,6 +389,9 @@ export function FileExplorer() {
         name={itemToDelete?.name ?? ""}
         folderStats={folderStats ?? undefined}
       />
+
+      <ImagePreviewModal />
+      <FilePreviewModal />
     </div>
   );
 }
