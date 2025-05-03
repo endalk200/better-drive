@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { FolderIcon, HomeIcon, StarIcon } from "lucide-react";
+import { HomeIcon, StarIcon } from "lucide-react";
 
 export function DashboardNav() {
   const pathname = usePathname();
@@ -19,11 +19,6 @@ export function DashboardNav() {
       title: "Starred",
       href: "/dashboard/starred",
       icon: StarIcon,
-    },
-    {
-      title: "Recent",
-      href: "/dashboard/recent",
-      icon: FolderIcon,
     },
   ];
 

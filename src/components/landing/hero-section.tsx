@@ -17,7 +17,7 @@ export function HeroSection() {
               </p>
             </div>
             <div className="flex flex-col gap-2 min-[400px]:flex-row">
-              <Link href="/auth/register" className="w-full min-[400px]:w-auto">
+              <Link href="/auth/login" className="w-full min-[400px]:w-auto">
                 <Button size="lg" className="w-full">
                   Get Started
                 </Button>
@@ -40,7 +40,7 @@ export function HeroSection() {
                       <div className="h-3 w-3 rounded-full bg-yellow-500"></div>
                       <div className="h-3 w-3 rounded-full bg-green-500"></div>
                     </div>
-                    <div className="text-xs">FileVault</div>
+                    <div className="text-xs">Better Drive</div>
                   </div>
                   <div className="flex-1 p-4">
                     <div className="grid grid-cols-4 gap-2">

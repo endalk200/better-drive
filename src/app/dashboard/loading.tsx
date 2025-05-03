@@ -1,7 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function FileExplorerSkeleton() {
-  // Create an array of 8 items for the skeleton grid
   const skeletonItems = Array.from({ length: 8 }, (_, i) => i);
 
   return (

@@ -6,7 +6,7 @@ export function LandingFooter() {
       <div className="container flex flex-col items-center justify-between gap-4 md:flex-row">
         <div className="flex flex-col items-center gap-4 md:flex-row md:gap-6">
           <Link href="/" className="flex items-center space-x-2">
-            <span className="font-bold">FileVault</span>
+            <span className="font-bold">Better Drive</span>
           </Link>
           <nav className="flex gap-4 md:gap-6">
             <Link
@@ -14,12 +14,6 @@ export function LandingFooter() {
               className="text-xs underline-offset-4 hover:underline md:text-sm"
             >
               Features
-            </Link>
-            <Link
-              href="/#pricing"
-              className="text-xs underline-offset-4 hover:underline md:text-sm"
-            >
-              Pricing
             </Link>
             <Link
               href="/privacy"
@@ -36,7 +30,7 @@ export function LandingFooter() {
           </nav>
         </div>
         <div className="text-center text-xs md:text-sm">
-          © {new Date().getFullYear()} FileVault. All rights reserved.
+          © {new Date().getFullYear()} Better Drive. All rights reserved.
         </div>
       </div>
     </footer>

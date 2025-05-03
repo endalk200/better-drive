@@ -1,9 +1,4 @@
-import {
-  FolderIcon,
-  ShieldCheckIcon,
-  ShareIcon,
-  CloudIcon,
-} from "lucide-react";
+import { FolderIcon, FileIcon } from "lucide-react";
 
 export function FeaturesSection() {
   const features = [
@@ -13,19 +8,9 @@ export function FeaturesSection() {
       description: "Create, rename, and organize your folders with ease.",
     },
     {
-      icon: <ShieldCheckIcon className="h-10 w-10" />,
-      title: "Secure Storage",
-      description: "Your files are encrypted and stored securely in the cloud.",
-    },
-    {
-      icon: <ShareIcon className="h-10 w-10" />,
-      title: "Easy Sharing",
-      description: "Share files and folders with anyone, anywhere.",
-    },
-    {
-      icon: <CloudIcon className="h-10 w-10" />,
-      title: "Cloud Access",
-      description: "Access your files from any device, anytime.",
+      icon: <FileIcon className="h-10 w-10" />,
+      title: "File Management",
+      description: "Upload, download, and manage your files securely.",
     },
   ];
 

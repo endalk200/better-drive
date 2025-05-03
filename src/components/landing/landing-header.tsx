@@ -2,8 +2,11 @@
 
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { signOut, useSession } from "next-auth/react";
 
 export function LandingHeader() {
+  const { data } = useSession();
+
   return (
     <header className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 flex w-full items-center justify-center border-b backdrop-blur">
       <div className="container flex h-16 items-center justify-between">
@@ -18,23 +21,37 @@ export function LandingHeader() {
             >
               Features
             </Link>
-            <Link
-              href="/#pricing"
-              className="hover:text-primary text-sm font-medium transition-colors"
-            >
-              Pricing
-            </Link>
           </nav>
         </div>
         <div className="flex items-center gap-2">
-          <Link href="/auth/login">
-            <Button variant="outline" size="sm">
-              Login
-            </Button>
-          </Link>
-          <Link href="/auth/login">
-            <Button size="sm">Sign Up</Button>
-          </Link>
+          {data?.user ? (
+            <>
+              <Link href="/dashboard">
+                <Button variant="outline" size="sm">
+                  Dashboard
+                </Button>
+              </Link>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  await signOut();
+                }}
+              >
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link href="/auth/login">
+                <Button variant="outline" size="sm">
+                  Login
+                </Button>
+              </Link>
+              <Link href="/auth/login">
+                <Button size="sm">Sign Up</Button>
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </header>
