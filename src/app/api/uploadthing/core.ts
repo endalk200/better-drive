@@ -1,19 +1,17 @@
 import { auth } from "@/server/auth";
+import {
+  MAX_STORAGE_LIMIT,
+  UPLOADTHING_ACCEPTED_MIME_TYPES,
+} from "@/server/config";
 import { db } from "@/server/db";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 
 const f = createUploadthing();
 
 export const ourFileRouter = {
-  // Define as many FileRoutes as you like, each with a unique routeSlug
-  fileUploader: f({
-    "image/png": { maxFileSize: "4MB" },
-    "application/pdf": { maxFileSize: "4MB" },
-    "application/msword": { maxFileSize: "4MB" },
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {
-      maxFileSize: "4MB",
-    },
-  })
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  fileUploader: f(UPLOADTHING_ACCEPTED_MIME_TYPES)
     // Set permissions and file types for this FileRoute
     .middleware(async ({ req }) => {
       const session = await auth();
@@ -25,23 +23,18 @@ export const ourFileRouter = {
         select: { storageUsed: true },
       });
 
-      if (!user || user.storageUsed >= 50 * 1024 * 1024) {
+      if (!user || user.storageUsed >= MAX_STORAGE_LIMIT) {
         throw new Error("Storage limit exceeded");
       }
 
       return { userId: session.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      await db.user.update({
-        where: { id: metadata.userId },
-        data: {
-          storageUsed: {
-            increment: file.size,
-          },
-        },
-      });
-
-      return { uploadedBy: metadata.userId };
+      return {
+        uploadedBy: metadata.userId,
+        fileUrl: file.ufsUrl,
+        fileName: file.name,
+      };
     }),
 } satisfies FileRouter;
 

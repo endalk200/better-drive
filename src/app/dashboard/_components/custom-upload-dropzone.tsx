@@ -10,6 +10,12 @@ import { api } from "@/trpc/react";
 import { useUploadThing } from "@/lib/utils/uploadthing";
 import { toast } from "sonner";
 import { formatBytes } from "@/lib/utils";
+import {
+  CLIENT_ACCEPTED_MIME_TYPES,
+  getSupportedFileTypesDescription,
+  MAX_FILE_SIZE_BYTES,
+  MAX_FILE_SIZE_MB,
+} from "@/server/config";
 
 interface CustomUploadDropzoneProps {
   onUploadComplete: () => void;
@@ -63,6 +69,7 @@ export function CustomUploadDropzone({
           setFiles([]);
           // Invalidate queries to refresh the file list
           await utils.folder.getContents.invalidate();
+          await utils.folder.getDefaultFolder.invalidate();
           await utils.user.getStorageInfo.invalidate();
 
           onUploadComplete();
@@ -83,8 +90,10 @@ export function CustomUploadDropzone({
   const onDrop = (acceptedFiles: File[]) => {
     // Check file size
     const validFiles = acceptedFiles.filter((file) => {
-      if (file.size > 4 * 1024 * 1024) {
-        toast.error(`${file.name} is too large. Maximum size is 4MB`);
+      if (file.size > MAX_FILE_SIZE_BYTES) {
+        toast.error(
+          `${file.name} is too large. Maximum size is ${MAX_FILE_SIZE_MB}MB.`,
+        );
         return false;
       }
       return true;
@@ -95,15 +104,7 @@ export function CustomUploadDropzone({
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: generateClientDropzoneAccept([
-      "image/*",
-      "application/pdf",
-      "application/msword",
-      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-      "text/plain",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ]),
+    accept: generateClientDropzoneAccept(CLIENT_ACCEPTED_MIME_TYPES),
   });
 
   const removeFile = (index: number) => {
@@ -158,7 +159,8 @@ export function CustomUploadDropzone({
             : "Drag & drop files here, or click to select files"}
         </p>
         <p className="mt-1 text-xs text-gray-500">
-          Supported files: Images, PDF, Word, Excel • Max file size: 4MB
+          Supported files: {getSupportedFileTypesDescription()}
+          Max file size: {MAX_FILE_SIZE_MB}MBjk
         </p>
       </div>
 
