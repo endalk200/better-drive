@@ -217,11 +217,3 @@ pnpm db:migrate
 1. Update GitHub OAuth callback URLs
 2. Configure UploadThing webhook (if needed)
 3. Set up monitoring and alerts
-
-## License 📝
-
-MIT
-
-## Contributing 🤝
-
-Contributions are welcome! Please read our contributing guidelines before submitting a pull request.
