@@ -1,7 +1,7 @@
 "use client";
 
 import { Progress } from "@/components/ui/progress";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes } from "@/lib/utils/formatter";
 import {
   Tooltip,
   TooltipContent,
