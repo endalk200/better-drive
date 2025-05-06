@@ -9,7 +9,7 @@ import { File, FileText, ImageIcon, UploadCloud, X } from "lucide-react";
 import { api } from "@/trpc/react";
 import { useUploadThing } from "@/lib/utils/uploadthing";
 import { toast } from "sonner";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes } from "@/lib/utils/formatter";
 import {
   CLIENT_ACCEPTED_MIME_TYPES,
   getSupportedFileTypesDescription,

@@ -3,7 +3,7 @@ import { type Metadata } from "next";
 import { Geist } from "next/font/google";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/react";
 
 import { TRPCReactProvider } from "@/trpc/react";
 
@@ -32,11 +32,13 @@ export default function RootLayout({
       <body>
         <TRPCReactProvider>
           <SessionProvider>
-            <NuqsAdapter>{children}</NuqsAdapter>
+            <NuqsAdapter>
+              {children}
+              <Analytics />
+            </NuqsAdapter>
           </SessionProvider>
           <Toaster position="bottom-right" richColors />
         </TRPCReactProvider>
-        <Analytics />
       </body>
     </html>
   );

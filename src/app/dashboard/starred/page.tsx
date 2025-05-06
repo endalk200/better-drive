@@ -14,7 +14,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { getFileIcon } from "../_components/utils";
-import { formatBytes } from "@/lib/utils";
+import { formatBytes } from "@/lib/utils/formatter";
 
 export default function StaredFileExplorer() {
   const router = useRouter();
@@ -138,20 +138,11 @@ export default function StaredFileExplorer() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem>
-                    <Pencil className="mr-2 h-4 w-4" />
-                    Rename
-                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => toggleStarFile.mutate({ id: file.id })}
                   >
                     <Star className="mr-2 h-4 w-4 fill-yellow-400 text-yellow-400" />
                     Unstar
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="text-red-600">
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

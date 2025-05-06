@@ -35,31 +35,31 @@ export function DeleteConfirmationModal({
 }: DeleteConfirmationModalProps) {
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="space-y-2">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-red-600">
             <Trash2 className="h-5 w-5" />
             Delete {type}
           </DialogTitle>
-          <DialogDescription className="space-y-2">
-            <p>
-              Are you sure you want to delete <strong>{name}</strong>?
-              {type === "file" && " This file will be permanently deleted."}
-            </p>
-            {type === "folder" && folderStats && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-                <p>This folder contains:</p>
-                <ul className="list-inside list-disc">
-                  <li>{folderStats.subFolderCount} subfolder(s)</li>
-                  <li>{folderStats.fileCount} file(s)</li>
-                </ul>
-                <p className="mt-2 font-medium">
-                  All contents will be permanently deleted.
-                </p>
-              </div>
-            )}
-          </DialogDescription>
         </DialogHeader>
+
+        <p>
+          Are you sure you want to delete <strong>{name}</strong>?
+          {type === "file" && " This file will be permanently deleted."}
+        </p>
+        {type === "folder" && folderStats && (
+          <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+            <p>This folder contains:</p>
+            <ul className="list-inside list-disc">
+              <li>{folderStats.subFolderCount} subfolder(s)</li>
+              <li>{folderStats.fileCount} file(s)</li>
+            </ul>
+            <p className="mt-2 font-medium">
+              All contents will be permanently deleted.
+            </p>
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={onClose} disabled={isLoading}>
             Cancel
